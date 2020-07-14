@@ -1,0 +1,134 @@
+PORTY WYMAGANE PRZEZ KUBERNETESA: 
+
+TCP 6443
+UDP 8472
+
+W zadaniu odblokowano wszystkie porty TCP i UDP 
+ 
+UTWORZENIE POŁĄCZENIA SSH:
+
+cat ~/.ssh/id_rsa.pub | ssh -i master.pem ubuntu@ec2-3-80-191-99.compute-1.amazonaws.com "cat - >> ~/.ssh/authorized_keys2"
+
+Master
+ssh ubuntu@ec2-54-152-234-149.compute-1.amazonaws.com
+Worker 1
+ssh ubuntu@ec2-18-215-189-220.compute-1.amazonaws.com
+Worker 2
+ssh ubuntu@ec2-54-235-38-139.compute-1.amazonaws.com
+
+ZAINSTALOWANIE DOCKERA:
+
+sudo apt-get remove docker docker-engine docker.io containerd runc
+sudo apt-get update
+sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+apt-key fingerprint 0EBFCD88
+
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+
+sudo apt-get update
+
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+sudo docker run hello-world
+
+Add user to docker group
+sudo groupadd docker
+sudo usermod -aG docker $USER
+Exit 
+Log in 
+docker run hello-world
+
+
+INSTALACJA LOKALNIE KUBERNETESA PRZY UŻYCIU K3sup 
+
+curl -sLS https://get.k3sup.dev | sh
+
+Podłączenie mastera:  
+
+k3sup install --ip 54.152.234.149 --user ubuntu
+export KUBECONFIG=/Users/daniel/Desktop/aws2/kubeconfig
+
+Sprawdzenie nodów podłączonych do klastra:
+
+kubectl get node -o wide
+
+WORKER 1
+k3sup join --ip 18.215.189.220 --server-ip 54.152.234.149 --user ubuntu
+
+WORKER2
+k3sup join --ip 54.235.38.139 --server-ip 54.152.234.149 --user ubuntu
+
+
+
+DEPLOY MANIFESTÓW KUBERNETESA (BEZ UŻYCIA HELMA)
+
+kubectl apply -Rf exmpl1/
+
+Przegląd: 
+
+kubectl get all /pods 
+
+Testowanie edpointów:
+
+http://18.215.189.220:30570/  -w1
+http://54.235.38.139:30570/ -w2
+http://54.152.234.149:30570/ -master
+
+Usuwanie manifestów: 
+
+kubectl delete service/nginx-service deployment.apps/nginx-deployment replicaset.apps/nginx-deployment-57ddb464cc
+
+helm delete release
+
+DOCKER IMAGE REPOSITORY
+
+danielpopek/scrapperbase
+
+PRZENIESIENIE KODU APLIKACJI DO WĘZŁÓW:
+
+https://github.com/DanielPopek/celery_scraper_base.git
+
+Lub
+
+scp -r scrapping_app/ ubuntu@18.215.189.220:/home/ubuntu/     —w1
+scp -r scrapping_app/ ubuntu@54.235.38.139:/home/ubuntu/     —w2
+
+scp glove.6B.100d.magnitude ubuntu@18.215.189.220:/home/ubuntu/celery_scraper_base/app/glove_vectors
+scp glove.6B.100d.magnitude ubuntu@54.235.38.139:/home/ubuntu/celery_scraper_base/app/glove_vectors
+
+KOMPOSE: 
+
+Generate chart 
+kompose convert -c 
+
+HELM:
+
+Deploying app: 
+helm install example2 ./helm/nginx-example/
+
+History/version check:
+helm history example44
+
+Rolling update:
+helm upgrade example44 ./docker-compose
+
+Rollback:
+
+helm rollback example44 1
+
+
+SHORTCUTS:
+
+http://18.215.189.220   -worker 1 IP
+http://54.235.38.139  -worker 2 IP
+http://54.152.234.149  -master IP

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -c
+    kompose.version: 1.20.0 ()
+  creationTimestamp: null
+  labels:
+    io.kompose.service: webapp
+  name: webapp
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: webapp
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -c
+        kompose.version: 1.20.0 ()
+      creationTimestamp: null
+      labels:
+        io.kompose.service: webapp
+    spec:
+      containers:
+      - args:
+        - python
+        - flask_server.py
+        env:
+        - name: CELERY_BROKER_URL
+          value: {{ .Values.celery.broker }}
+        - name: CELERY_RESULT_BACKEND
+          value: rpc
+        - name: SCRAP_LOCATION
+          value: {{ .Values.scrapLocation}}
+        - name: SCRAP_SCHEDULE
+          value: "15"
+        - name: prometheus_multiproc_dir
+          value: /multiprocessing
+        image: {{ .Values.baseImage }}
+        name: webapp
+        ports:
+        - containerPort: {{ .Values.webapp.port }}
+        resources: {}
+        volumeMounts:
+        - mountPath: /app
+          name: webapp-claim0
+        - mountPath: /multiprocessing
+          name: webapp-claim1
+      restartPolicy: Always
+      volumes:
+      - name: webapp-claim0
+        hostPath: 
+          path: /home/ubuntu/celery_scraper_base/app
+      - name: webapp-claim1
+        hostPath: 
+          path: /home/ubuntu/celery_scraper_base/shared/prometheus
+status: {}

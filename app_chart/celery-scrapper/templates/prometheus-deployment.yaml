@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -c
+    kompose.version: 1.20.0 ()
+  creationTimestamp: null
+  labels:
+    io.kompose.service: prometheus
+  name: prometheus
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: prometheus
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -c
+        kompose.version: 1.20.0 ()
+      creationTimestamp: null
+      labels:
+        io.kompose.service: prometheus
+    spec:
+      securityContext:
+        runAsUser: {{ .Values.security.user }}
+      containers:
+      - args:
+        - --config.file=/etc/prometheus/prometheus.yaml
+        image: prom/prometheus
+        name: prometheus
+        ports:
+        - containerPort: {{ .Values.prometheus.port }}
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/prometheus/
+          name: prometheus-claim0
+        - mountPath: /prometheus
+          name: prometheus-data
+      restartPolicy: Always
+      volumes:
+      - name: prometheus-claim0
+        hostPath: 
+          path: /home/ubuntu/celery_scraper_base/config/prometheus
+      - name: prometheus-data
+        hostPath: 
+          path: /home/ubuntu/celery_scraper_base/prometheus_data
+status: {}

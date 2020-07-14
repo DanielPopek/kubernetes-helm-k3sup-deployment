@@ -1,0 +1,36 @@
+replicaCount: 1
+timeWorkerReplicaCount: 1
+
+service:
+  type: NodePort
+
+baseImage: danielpopek/scrapperbase:v2
+
+scrapLocation: warsaw
+
+celery:
+  stats:
+    image: ovalmoney/celery-exporter
+    port: 9540
+  broker: amqp://guest:guest@rabbitmq:5672
+
+rabbitmq:
+  port: 5672
+  nodeConfigDir: /home/ubuntu/celery_scraper_base/rabbit.conf
+
+security:
+  user: 1000
+
+grafana:
+  port: 3000
+
+mongodb:
+  initDatabase: tweetmldb
+  nodeDir: /home/ubuntu/celery_scraper_base/mongodb_data
+
+prometheus:
+  port: 9090
+
+webapp:
+  port: 5000
+

@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: scheduler
+  name: scheduler
+spec:
+  securityContext:
+    runAsUser: {{ .Values.security.user }}
+  containers:
+  - args:
+    - celery
+    - beat
+    - --app=worker.app
+    - --loglevel=INFO
+    env:
+    - name: CELERY_BROKER_URL
+      value: {{ .Values.celery.broker }}
+    - name: CELERY_RESULT_BACKEND
+      value: rpc
+    - name: SCRAP_LOCATION
+      value: {{ .Values.scrapLocation}}
+    - name: SCRAP_SCHEDULE
+      value: "15"
+    - name: prometheus_multiproc_dir
+      value: /multiprocessing
+    image: {{ .Values.baseImage }}
+    name: scheduler
+    resources: {}
+    volumeMounts:
+    - mountPath: /app
+      name: scheduler-claim0
+  restartPolicy: Always
+  volumes:
+  - name: scheduler-claim0
+    hostPath: 
+      path: /home/ubuntu/celery_scraper_base/app
+status: {}

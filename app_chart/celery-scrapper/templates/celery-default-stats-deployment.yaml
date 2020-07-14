@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -c
+    kompose.version: 1.20.0 ()
+  creationTimestamp: null
+  labels:
+    io.kompose.service: celery-default-stats
+  name: celery-default-stats
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: celery-default-stats
+  replicas: {{ .Values.replicaCount }}
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -c
+        kompose.version: 1.20.0 ()
+      creationTimestamp: null
+      labels:
+        io.kompose.service: celery-default-stats
+    spec:
+      containers:
+      - env:
+        - name: CELERY_EXPORTER_BROKER_URL
+          value: {{ .Values.celery.broker }}
+        image: {{ .Values.celery.stats.image }}
+        name: celery-default-stats
+        ports:
+        - containerPort: {{ .Values.celery.stats.port }}
+        resources: {}
+      restartPolicy: Always
+status: {}
